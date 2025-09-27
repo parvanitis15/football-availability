@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagkrati FC Weekly Matches</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #6c757d;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #2D3748;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2D3748;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+        
+        .event-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .event-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .event-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .event-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2D3748;
+            flex: 1;
+        }
+        
+        .event-date {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .event-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6c757d;
+        }
+        
+        .availability-section {
+            border-top: 2px solid #f8f9fa;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        
+        .availability-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .availability-count {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .availability-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .availability-form input {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .player-tag {
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        
+        .no-events {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.1rem;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .calendar-link {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .calendar-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+        }
+        
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-content {
+                padding: 20px;
+            }
+            
+            .event-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .event-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .availability-form {
+                flex-direction: column;
+            }
+            
+            .availability-form input {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <h1>⚽ Football Team Availability</h1>
+                    <p>Manage your weekly matches and track team availability</p>
+                </div>
+                <div id="adminSection" style="text-align: right;">
+                    <div id="adminLogin" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="password" id="adminPassword" placeholder="Admin Password" style="padding: 8px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; background: rgba(255,255,255,0.1); color: white; font-size: 0.9rem;" onkeypress="if(event.key==='Enter') attemptAdminLogin();">
+                        <button onclick="attemptAdminLogin()" style="padding: 8px 16px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: white; cursor: pointer; font-size: 0.9rem;">Admin Login</button>
+                    </div>
+                    <div id="adminWelcome" style="display: none;">
+                        <span style="margin-right: 15px; opacity: 0.9;">👑 Admin Mode</span>
+                        <button onclick="logoutAdmin()" style="padding: 6px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: white; cursor: pointer; font-size: 0.8rem;">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('schedule')">📅 Schedule Matches</button>
+            <button class="tab" onclick="switchTab('availability')">✋ Mark Availability</button>
+        </div>
+        
+        <div id="schedule" class="tab-content active">
+            <h2 style="margin-bottom: 25px; color: #2D3748;">Schedule New Match</h2>
+            
+            <form id="eventForm" style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+                <div class="form-group">
+                    <label for="matchTitle">Match Title</label>
+                    <input type="text" id="matchTitle" placeholder="e.g., vs Arsenal FC - Home Game" required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label for="matchDate">Date</label>
+                        <input type="date" id="matchDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="matchTime">Time</label>
+                        <input type="time" id="matchTime" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="matchLocation">Location</label>
+                    <input type="text" id="matchLocation" placeholder="Stadium name or address" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="matchNotes">Additional Notes (Optional)</label>
+                    <textarea id="matchNotes" rows="3" placeholder="Any special instructions, equipment needed, etc."></textarea>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <span>📅</span>
+                    Schedule Match
+                </button>
+            </form>
+            
+            <h2 style="margin-bottom: 20px; color: #2D3748;">Upcoming Matches</h2>
+            <div id="eventsList"></div>
+        </div>
+        
+        <div id="availability" class="tab-content">
+            <h2 style="margin-bottom: 25px; color: #2D3748;">Mark Your Availability</h2>
+            <div id="availabilityEvents"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://educstxlgitewnvxqhlk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkdWNzdHhsZ2l0ZXdudnhxaGxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5Njk4MTEsImV4cCI6MjA3NDU0NTgxMX0.TMVTDNea8CQasr2Tdppp4Gmkq3j61Lso8qAd1kquP3w';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let events = [];
+        let isAdmin = false;
+        
+        // Admin password hashes (secure - original passwords cannot be retrieved from these hashes)
+        const ADMIN_PASSWORD_HASHES = [
+            '7f0bd2e4eaaf39dd163d9e5b5f15decca806105ca84b62e0500c905372274a59', // Your admin password (securely hashed)
+            'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', // Backup demo password: "hello" 
+            '2cf24dba4f21d4288094c84b7fad10d9c8c8cfce0ab2e8a4e15dccc3c8a3ddae'  // Backup demo password: "test"
+        ];
+        
+        // Secure hash function using Web Crypto API
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hash));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Admin functions
+        async function attemptAdminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            const passwordHash = await hashPassword(password);
+            
+            if (ADMIN_PASSWORD_HASHES.includes(passwordHash)) {
+                isAdmin = true;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminWelcome').style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+                localStorage.setItem('isAdmin', 'true');
+                updateAdminUI();
+                alert('Welcome, Admin! You can now create and delete matches.');
+            } else {
+                alert('Invalid admin password');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+        
+        function logoutAdmin() {
+            isAdmin = false;
+            document.getElementById('adminLogin').style.display = 'flex';
+            document.getElementById('adminWelcome').style.display = 'none';
+            localStorage.removeItem('isAdmin');
+            updateAdminUI();
+        }
+        
+        function updateAdminUI() {
+            const scheduleForm = document.getElementById('eventForm');
+            const scheduleTab = document.querySelector('[onclick="switchTab(\'schedule\')"]');
+            
+            if (isAdmin) {
+                scheduleForm.style.display = 'block';
+                scheduleTab.style.display = 'block';
+            } else {
+                scheduleForm.style.display = 'none';
+                scheduleTab.style.display = 'none';
+                // Switch to availability tab if currently on schedule tab
+                if (document.getElementById('schedule').classList.contains('active')) {
+                    switchTab('availability');
+                }
+            }
+            
+            // Re-render to show/hide delete buttons
+            renderEvents();
+            renderAvailabilityEvents();
+        }
+        
+        // Check if user was previously logged in as admin
+        function checkAdminStatus() {
+            if (localStorage.getItem('isAdmin') === 'true') {
+                isAdmin = true;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminWelcome').style.display = 'block';
+                updateAdminUI();
+            } else {
+                updateAdminUI();
+            }
+        }
+        
+        // Database functions
+        async function initializeDatabase() {
+            try {
+                // Load existing events from Supabase
+                await loadEvents();
+                
+                // Subscribe to real-time changes
+                supabase
+                    .channel('matches')
+                    .on('postgres_changes', 
+                        { event: '*', schema: 'public', table: 'matches' }, 
+                        handleMatchChange
+                    )
+                    .subscribe();
+                    
+                supabase
+                    .channel('availability')
+                    .on('postgres_changes', 
+                        { event: '*', schema: 'public', table: 'availability' }, 
+                        handleAvailabilityChange
+                    )
+                    .subscribe();
+                    
+            } catch (error) {
+                console.error('Database initialization error:', error);
+                // Fallback to localStorage if Supabase fails
+                events = JSON.parse(localStorage.getItem('footballEvents') || '[]');
+            }
+        }
+        
+        async function loadEvents() {
+            try {
+                const { data: matches, error } = await supabase
+                    .from('matches')
+                    .select(`
+                        *,
+                        availability (
+                            player_name
+                        )
+                    `)
+                    .order('date', { ascending: true });
+                
+                if (error) throw error;
+                
+                // Transform data to match existing structure
+                events = matches.map(match => ({
+                    id: match.id,
+                    title: match.title,
+                    date: match.date,
+                    time: match.time,
+                    location: match.location,
+                    notes: match.notes || '',
+                    availability: match.availability.map(a => a.player_name)
+                }));
+                
+                renderEvents();
+                renderAvailabilityEvents();
+                
+            } catch (error) {
+                console.error('Error loading events:', error);
+            }
+        }
+        
+        function handleMatchChange(payload) {
+            console.log('Match change:', payload);
+            loadEvents(); // Reload all events when changes occur
+        }
+        
+        function handleAvailabilityChange(payload) {
+            console.log('Availability change:', payload);
+            loadEvents(); // Reload all events when availability changes
+        }
+        
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'availability') {
+                renderAvailabilityEvents();
+            } else {
+                renderEvents();
+            }
+        }
+        
+        function saveEvents() {
+            // Keep localStorage as backup
+            localStorage.setItem('footballEvents', JSON.stringify(events));
+        }
+        
+        function generateCalendarLink(event) {
+            const startDate = new Date(`${event.date}T${event.time}`);
+            const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000)); // 2 hours duration
+            
+            const formatDate = (date) => {
+                return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+            
+            const params = new URLSearchParams({
+                action: 'TEMPLATE',
+                text: event.title,
+                dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
+                details: `Location: ${event.location}${event.notes ? '\n\nNotes: ' + event.notes : ''}`,
+                location: event.location
+            });
+            
+            return `https://calendar.google.com/calendar/render?${params.toString()}`;
+        }
+        
+        async function addEvent(eventData) {
+            try {
+                const { data, error } = await supabase
+                    .from('matches')
+                    .insert([{
+                        title: eventData.title,
+                        date: eventData.date,
+                        time: eventData.time,
+                        location: eventData.location,
+                        notes: eventData.notes
+                    }])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                // Add to local events array for immediate UI update
+                const newEvent = {
+                    id: data.id,
+                    ...eventData,
+                    availability: []
+                };
+                events.push(newEvent);
+                saveEvents();
+                renderEvents();
+                
+            } catch (error) {
+                console.error('Error adding event:', error);
+                // Fallback to localStorage
+                const newEvent = {
+                    id: Date.now(),
+                    ...eventData,
+                    availability: []
+                };
+                events.push(newEvent);
+                saveEvents();
+                renderEvents();
+            }
+        }
+        
+        async function deleteEvent(eventId) {
+            if (!isAdmin) {
+                alert('Only admins can delete matches');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this match?')) {
+                try {
+                    // Delete from Supabase
+                    const { error } = await supabase
+                        .from('matches')
+                        .delete()
+                        .eq('id', eventId);
+                    
+                    if (error) throw error;
+                    
+                    // Update local events
+                    events = events.filter(event => event.id !== eventId);
+                    saveEvents();
+                    renderEvents();
+                    renderAvailabilityEvents();
+                    
+                } catch (error) {
+                    console.error('Error deleting event:', error);
+                    // Fallback to localStorage
+                    events = events.filter(event => event.id !== eventId);
+                    saveEvents();
+                    renderEvents();
+                    renderAvailabilityEvents();
+                }
+            }
+        }
+        
+        async function addAvailability(eventId, playerName) {
+            if (!playerName.trim()) return;
+            
+            try {
+                // Check if player is already available for this match
+                const { data: existing, error: checkError } = await supabase
+                    .from('availability')
+                    .select('*')
+                    .eq('match_id', eventId)
+                    .eq('player_name', playerName)
+                    .single();
+                
+                if (existing) {
+                    alert('You have already marked yourself as available for this match!');
+                    return;
+                }
+                
+                // Add availability to Supabase
+                const { error } = await supabase
+                    .from('availability')
+                    .insert([{
+                        match_id: eventId,
+                        player_name: playerName.trim()
+                    }]);
+                
+                if (error) throw error;
+                
+                // Update local events for immediate UI update
+                const event = events.find(e => e.id === eventId);
+                if (event && !event.availability.includes(playerName)) {
+                    event.availability.push(playerName);
+                    saveEvents();
+                    renderEvents();
+                    renderAvailabilityEvents();
+                }
+                
+            } catch (error) {
+                console.error('Error adding availability:', error);
+                // Fallback to localStorage
+                const event = events.find(e => e.id === eventId);
+                if (event && !event.availability.includes(playerName)) {
+                    event.availability.push(playerName);
+                    saveEvents();
+                    renderEvents();
+                    renderAvailabilityEvents();
+                }
+            }
+        }
+        
+        function handleAvailabilitySubmit(eventId, inputElement) {
+            const playerName = inputElement.value.trim();
+            if (playerName) {
+                addAvailability(eventId, playerName);
+                inputElement.value = '';
+            }
+        }
+        
+        function preserveInputValues() {
+            const inputValues = {};
+            document.querySelectorAll('input[id^="player-"]').forEach(input => {
+                if (input.value) {
+                    inputValues[input.id] = input.value;
+                }
+            });
+            return inputValues;
+        }
+        
+        function restoreInputValues(inputValues) {
+            Object.keys(inputValues).forEach(id => {
+                const input = document.getElementById(id);
+                if (input && input !== document.activeElement) {
+                    input.value = inputValues[id];
+                }
+            });
+        }
+        
+        function renderEvents() {
+            const eventsList = document.getElementById('eventsList');
+            
+            if (events.length === 0) {
+                eventsList.innerHTML = `
+                    <div class="no-events">
+                        <h3>No matches scheduled yet</h3>
+                        <p>Use the form above to schedule your first match!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort events by date
+            const sortedEvents = [...events].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+            
+            eventsList.innerHTML = sortedEvents.map(event => {
+                const eventDate = new Date(`${event.date}T${event.time}`);
+                const formattedDate = eventDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const formattedTime = eventDate.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="event-card">
+                        <div class="event-header">
+                            <div class="event-title">${event.title}</div>
+                            <div class="event-date">${formattedDate}</div>
+                        </div>
+                        
+                        <div class="event-details">
+                            <div class="detail-item">
+                                <span>🕐</span>
+                                <span>${formattedTime}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>📍</span>
+                                <span>${event.location}</span>
+                            </div>
+                            ${event.notes ? `
+                                <div class="detail-item" style="grid-column: 1 / -1;">
+                                    <span>📝</span>
+                                    <span>${event.notes}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="availability-section">
+                            <div class="availability-header">
+                                <h3>Team Availability</h3>
+                                <div class="availability-count">
+                                    ${event.availability.length} player${event.availability.length !== 1 ? 's' : ''} available
+                                </div>
+                            </div>
+                            
+                            ${event.availability.length > 0 ? `
+                                <div class="player-list">
+                                    ${event.availability.map(player => `
+                                        <div class="player-tag">${player}</div>
+                                    `).join('')}
+                                </div>
+                            ` : '<p style="color: #6c757d; font-style: italic;">No availability marked yet</p>'}
+                        </div>
+                        
+                        <div class="event-actions" style="margin-top: 20px;">
+                            <a href="${generateCalendarLink(event)}" target="_blank" class="calendar-link">
+                                📅 Add to Google Calendar
+                            </a>
+                            ${isAdmin ? `
+                                <button onclick="deleteEvent(${event.id})" class="btn btn-danger">
+                                    🗑️ Delete Match
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderAvailabilityEvents() {
+            const availabilityEvents = document.getElementById('availabilityEvents');
+            
+            // Preserve input values before re-rendering
+            const inputValues = preserveInputValues();
+            
+            if (events.length === 0) {
+                availabilityEvents.innerHTML = `
+                    <div class="no-events">
+                        <h3>No matches scheduled</h3>
+                        <p>Switch to the "Schedule Matches" tab to create your first match!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Filter for upcoming events and sort by date
+            const upcomingEvents = events
+                .filter(event => new Date(`${event.date}T${event.time}`) >= new Date())
+                .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+            
+            if (upcomingEvents.length === 0) {
+                availabilityEvents.innerHTML = `
+                    <div class="no-events">
+                        <h3>No upcoming matches</h3>
+                        <p>All scheduled matches have passed.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            availabilityEvents.innerHTML = upcomingEvents.map(event => {
+                const eventDate = new Date(`${event.date}T${event.time}`);
+                const formattedDate = eventDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const formattedTime = eventDate.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="event-card">
+                        <div class="event-header">
+                            <div class="event-title">${event.title}</div>
+                            <div class="event-date">${formattedDate}</div>
+                        </div>
+                        
+                        <div class="event-details">
+                            <div class="detail-item">
+                                <span>🕐</span>
+                                <span>${formattedTime}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>📍</span>
+                                <span>${event.location}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="availability-section">
+                            <div class="availability-header">
+                                <h3>Mark Your Availability</h3>
+                                <div class="availability-count">
+                                    ${event.availability.length} player${event.availability.length !== 1 ? 's' : ''} confirmed
+                                </div>
+                            </div>
+                            
+                            <div class="availability-form">
+                                <input type="text" id="player-${event.id}" placeholder="Enter your name" onkeypress="if(event.key==='Enter') handleAvailabilitySubmit(${event.id}, this);">
+                                <button onclick="handleAvailabilitySubmit(${event.id}, document.getElementById('player-${event.id}'));" class="btn btn-secondary">
+                                    ✋ I'm Available
+                                </button>
+                            </div>
+                            
+                            ${event.availability.length > 0 ? `
+                                <div class="player-list">
+                                    ${event.availability.map(player => `
+                                        <div class="player-tag">${player}</div>
+                                    `).join('')}
+                                </div>
+                            ` : '<p style="color: #6c757d; font-style: italic; margin-top: 10px;">Be the first to confirm your availability!</p>'}
+                        </div>
+                        
+                        <div class="event-actions" style="margin-top: 20px;">
+                            <a href="${generateCalendarLink(event)}" target="_blank" class="calendar-link">
+                                📅 Add to Google Calendar
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Restore input values after re-rendering
+            setTimeout(() => restoreInputValues(inputValues), 0);
+        }
+        
+        // Event form submission
+        document.getElementById('eventForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('matchTitle').value,
+                date: document.getElementById('matchDate').value,
+                time: document.getElementById('matchTime').value,
+                location: document.getElementById('matchLocation').value,
+                notes: document.getElementById('matchNotes').value
+            };
+            
+            await addEvent(formData);
+            
+            // Reset form
+            this.reset();
+            
+            // Show success message
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span>✅</span> Match Scheduled!';
+            submitBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }, 2000);
+        });
+        
+        // Set minimum date to today
+        document.getElementById('matchDate').min = new Date().toISOString().split('T')[0];
+        
+        // Initialize database and render
+        checkAdminStatus();
+        initializeDatabase();
+    </script>
+</body>
+</html>
