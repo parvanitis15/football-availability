@@ -241,6 +241,29 @@
             border-radius: 15px;
             font-size: 0.9rem;
             color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .player-delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .player-delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
         }
         
         .no-events {
@@ -713,6 +736,46 @@
             }
         }
         
+        async function removeAvailability(eventId, playerName) {
+            if (!isAdmin) {
+                alert('Only admins can remove players from matches');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to remove ${playerName} from this match?`)) {
+                try {
+                    // Remove from Supabase
+                    const { error } = await supabase
+                        .from('availability')
+                        .delete()
+                        .eq('match_id', eventId)
+                        .eq('player_name', playerName);
+                    
+                    if (error) throw error;
+                    
+                    // Update local events
+                    const event = events.find(e => e.id === eventId);
+                    if (event) {
+                        event.availability = event.availability.filter(name => name !== playerName);
+                        saveEvents();
+                        renderEvents();
+                        renderAvailabilityEvents();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error removing availability:', error);
+                    // Fallback to localStorage
+                    const event = events.find(e => e.id === eventId);
+                    if (event) {
+                        event.availability = event.availability.filter(name => name !== playerName);
+                        saveEvents();
+                        renderEvents();
+                        renderAvailabilityEvents();
+                    }
+                }
+            }
+        }
+        
         function handleAvailabilitySubmit(eventId, inputElement) {
             const playerName = inputElement.value.trim();
             if (playerName) {
@@ -804,7 +867,12 @@
                             ${event.availability.length > 0 ? `
                                 <div class="player-list">
                                     ${event.availability.map(player => `
-                                        <div class="player-tag">${player}</div>
+                                        <div class="player-tag">
+                                            <span>${player}</span>
+                                            ${isAdmin ? `
+                                                <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
+                                            ` : ''}
+                                        </div>
                                     `).join('')}
                                 </div>
                             ` : '<p style="color: #6c757d; font-style: italic;">No availability marked yet</p>'}
@@ -905,7 +973,12 @@
                             ${event.availability.length > 0 ? `
                                 <div class="player-list">
                                     ${event.availability.map(player => `
-                                        <div class="player-tag">${player}</div>
+                                        <div class="player-tag">
+                                            <span>${player}</span>
+                                            ${isAdmin ? `
+                                                <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
+                                            ` : ''}
+                                        </div>
                                     `).join('')}
                                 </div>
                             ` : '<p style="color: #6c757d; font-style: italic; margin-top: 10px;">Be the first to confirm your availability!</p>'}

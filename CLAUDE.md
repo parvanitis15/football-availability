@@ -6,6 +6,7 @@ A single-page HTML application for managing football team match scheduling and p
 ## Key Features
 - **Match Scheduling**: Create new matches with date, time, location, and notes
 - **Availability Tracking**: Players can mark themselves as available for matches
+- **Admin Player Management**: Admins can remove players from match availability lists
 - **Google Calendar Integration**: Generate calendar links for scheduled matches
 - **Local Storage**: Data persists in browser localStorage
 - **Responsive Design**: Mobile-friendly interface
@@ -18,7 +19,7 @@ A single-page HTML application for managing football team match scheduling and p
 ## File Structure
 ```
 football-availability-scheduler/
-├── football_availability_app.html  # Main application file
+├── index.html                      # Main application file
 ├── CLAUDE.md                       # This context file
 └── README.md                       # Project documentation
 ```
@@ -32,7 +33,8 @@ football-availability-scheduler/
 
 ### JavaScript Functionality
 - Event management (add, delete, render)
-- Availability tracking per event
+- Availability tracking per event (add/remove players)
+- Admin-only player removal from matches
 - Google Calendar link generation
 - Local storage persistence
 - Tab switching functionality
@@ -55,7 +57,7 @@ Events are stored as objects with:
 
 ## Development Commands
 Since this is a static HTML file, no build process is required:
-- Open `football_availability_app.html` directly in a web browser
+- Open `index.html` directly in a web browser
 - For development, use a local server: `python -m http.server 8000` or similar
 - No compilation, bundling, or package management needed
 
@@ -65,9 +67,9 @@ Since this is a static HTML file, no build process is required:
 - Uses ES6+ JavaScript features
 
 ## Potential Enhancements
-- Add player removal from availability lists
 - Export functionality for match schedules
 - Email notifications or reminders
 - Team roster management
 - Match result tracking
 - Backend integration for multi-device sync
+- Player statistics and performance tracking
