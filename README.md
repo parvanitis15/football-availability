@@ -1,8 +1,6 @@
-# ⚽ Pagkrati FC Team Availability
+# ⚽ Football Team Availability Scheduler
 
 A simple, elegant web application for managing football team match scheduling and tracking player availability. Perfect for local teams, recreational leagues, or any group that needs to coordinate match attendance.
-
-🚀 **Live App**: https://pagkrati-fc.netlify.app
 
 ## 🚀 Features
 
@@ -18,16 +16,18 @@ A simple, elegant web application for managing football team match scheduling an
 
 ## 🎯 Quick Start
 
-1. **Visit the App**: Go to https://pagkrati-fc.netlify.app
-2. **Sign In**: Click "Sign in with Google" (admins get scheduling privileges)
-3. **Schedule Matches**: Admins can create and manage matches
-4. **Mark Availability**: Players can mark themselves available for upcoming matches
-5. **Share**: Send the URL to your team members
+### Option 1: Use Existing Deployment
+1. **Fork this repository** to your GitHub account
+2. **Deploy to Netlify, Vercel, or GitHub Pages**
+3. **Configure Google OAuth** with your deployment URL
+4. **Add admin emails** to the whitelist in `index.html`
 
-### For Development
-1. **Clone Repository**: `git clone https://github.com/parvanitis15/football-availability.git`
-2. **Local Testing**: Use `python -m http.server 8000` then visit `http://localhost:8000`
-3. **Deploy**: Push to main branch for automatic Netlify deployment
+### Option 2: Local Development
+1. **Clone Repository**: `git clone [your-fork-url]`
+2. **Set up Google OAuth**: Create a Google Cloud project and OAuth client
+3. **Update Configuration**: Add your client ID and admin emails to `index.html`
+4. **Local Testing**: Use `python -m http.server 8000` then visit `http://localhost:8000`
+5. **Deploy**: Push to your chosen hosting platform
 
 ## 📖 How to Use
 
@@ -87,20 +87,34 @@ The application is fully responsive and optimized for mobile devices:
 ## ⚙️ Configuration
 
 ### Google OAuth Setup
-1. **Go to Google Cloud Console**: https://console.cloud.google.com/auth/clients/1059039825869-erjpp9hnpgh1sv1jrmv84e01efv0r0un.apps.googleusercontent.com
-2. **Authorized JavaScript Origins**:
-   - Production: `https://pagkrati-fc.netlify.app`
-   - Local testing: `http://localhost:8000`
-3. **Add Authorized Redirect URIs** (same as origins)
+1. **Create a Google Cloud Project**:
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select existing one
+   - Enable the Google+ API
+
+2. **Create OAuth 2.0 Credentials**:
+   - Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+   - Choose "Web application"
+   - Add your deployment URL to "Authorized JavaScript origins"
+   - Add the same URL to "Authorized redirect URIs"
+
+3. **Update the Application**:
+   - Replace `GOOGLE_CLIENT_ID` in `index.html` with your client ID
+   - Add your domain to authorized origins (no paths allowed)
 
 ### Adding Admin Users
 Edit the `ADMIN_EMAILS` array in `index.html`:
 ```javascript
 const ADMIN_EMAILS = [
-    'pearvan14@gmail.com',
-    'newemail@example.com'  // Add new admin emails here
+    'admin@yourteam.com',
+    'coach@yourteam.com'  // Add admin emails here
 ];
 ```
+
+### Deployment Notes
+- **Netlify/Vercel**: Drag and drop the `index.html` file
+- **GitHub Pages**: Push to a repository and enable Pages
+- **Custom Domain**: Update OAuth origins when domain changes
 
 ## 🔧 Customization
 
@@ -150,4 +164,4 @@ This project is open source and available for personal and commercial use. Feel 
 
 ---
 
-**Getting Started**: Visit https://pagkrati-fc.netlify.app and start scheduling your team's matches! ⚽
+**Getting Started**: Fork this repository, deploy it, and start scheduling your team's matches! ⚽

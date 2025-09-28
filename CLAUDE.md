@@ -62,33 +62,32 @@ Events are stored as objects with:
 - `availability`: Array of player names who marked themselves available
 
 ### Authentication
-- Google OAuth 2.0 client ID: `1059039825869-erjpp9hnpgh1sv1jrmv84e01efv0r0un.apps.googleusercontent.com`
-- Admin emails whitelist: `['pearvan14@gmail.com']`
+- Google OAuth 2.0 client ID: Configurable in index.html
+- Admin emails whitelist: Configurable array in index.html
 - User session stored in localStorage
 
 ## Setup Instructions
 
 ### Google OAuth Configuration
-1. Go to Google Cloud Console: https://console.cloud.google.com/auth/clients/1059039825869-erjpp9hnpgh1sv1jrmv84e01efv0r0un.apps.googleusercontent.com
+1. Create a Google Cloud project and OAuth 2.0 client ID
 2. Add authorized JavaScript origins:
    - For local testing: `http://localhost:8000`
-   - For production: `https://pagkrati-fc.netlify.app`
+   - For production: Your deployment URL (must not contain paths)
 3. Add authorized redirect URIs (same as origins)
+4. Update `GOOGLE_CLIENT_ID` constant in index.html
 
-### Live Application
-🚀 **Access the app**: https://pagkrati-fc.netlify.app
-
-### Deployment
-- **Platform**: Netlify
-- **Auto-deploy**: Connected to GitHub repository
-- **Custom domain**: pagkrati-fc.netlify.app
+### Deployment Options
+- **Netlify**: Connect GitHub repository for auto-deploy
+- **Vercel**: Import repository for serverless deployment
+- **GitHub Pages**: Enable Pages in repository settings
+- **Custom hosting**: Upload index.html to any web server
 
 ### Adding Admin Users
 To add new admin users, update the `ADMIN_EMAILS` array in index.html:
 ```javascript
 const ADMIN_EMAILS = [
-    'pearvan14@gmail.com',
-    'newemail@example.com'  // Add new admin emails here
+    'admin@yourteam.com',
+    'coach@yourteam.com'  // Add admin emails here
 ];
 ```
 
