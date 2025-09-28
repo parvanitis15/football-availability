@@ -228,6 +228,20 @@
             min-width: 200px;
         }
         
+        .email-notification {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        
+        .email-notification input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
         .player-list {
             display: flex;
             flex-wrap: wrap;
@@ -467,6 +481,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script>
         // Supabase configuration
         const SUPABASE_URL = 'https://educstxlgitewnvxqhlk.supabase.co';
@@ -482,9 +497,70 @@
             'pearvan14@gmail.com'
         ];
         
+        // EmailJS configuration (replace with your EmailJS credentials)
+        const EMAILJS_PUBLIC_KEY = 'kWGKBzUEr5Vc7tU0x'; // Replace with your EmailJS public key
+        const EMAILJS_SERVICE_ID = 'service_bcpk8oc'; // Replace with your EmailJS service ID
+        const EMAILJS_TEMPLATE_ID = 'template_player_confirm'; // Replace with your EmailJS template ID
+        
         let events = [];
         let isAdmin = false;
         let currentUser = null;
+        
+        // Initialize EmailJS
+        function initializeEmailJS() {
+            if (EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+                emailjs.init(EMAILJS_PUBLIC_KEY);
+            }
+        }
+        
+        // Send email notification
+        async function sendEmailNotification(eventId, playerName, playerEmail) {
+            if (EMAILJS_PUBLIC_KEY === 'YOUR_EMAILJS_PUBLIC_KEY') {
+                console.log('EmailJS not configured - email notification skipped');
+                return;
+            }
+            
+            try {
+                const event = events.find(e => e.id === eventId);
+                if (!event) return;
+                
+                const eventDate = new Date(`${event.date}T${event.time}`);
+                const formattedDate = eventDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const formattedTime = eventDate.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const availablePlayersText = event.availability.length > 0 
+                    ? event.availability.join(', ') 
+                    : 'No other players confirmed yet';
+                
+                const templateParams = {
+                    to_email: playerEmail,
+                    to_name: playerName,
+                    match_title: event.title,
+                    match_date: formattedDate,
+                    match_time: formattedTime,
+                    match_location: event.location,
+                    match_notes: event.notes || 'No additional notes',
+                    available_count: event.availability.length,
+                    available_players: availablePlayersText,
+                    player_name: playerName
+                };
+                
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+                console.log('Email notification sent successfully');
+                
+            } catch (error) {
+                console.error('Error sending email notification:', error);
+                // Don't show error to user as email is optional
+            }
+        }
         
         // Google Authentication functions
         function initializeGoogleAuth() {
@@ -797,7 +873,7 @@
             }
         }
         
-        async function addAvailability(eventId, playerName) {
+        async function addAvailability(eventId, playerName, sendEmail = false) {
             if (!playerName.trim()) return;
             
             try {
@@ -831,6 +907,11 @@
                     saveEvents();
                     renderEvents();
                     renderAvailabilityEvents();
+                    
+                    // Send email notification if requested and user is signed in
+                    if (sendEmail && currentUser && currentUser.email) {
+                        await sendEmailNotification(eventId, playerName, currentUser.email);
+                    }
                 }
                 
             } catch (error) {
@@ -842,6 +923,11 @@
                     saveEvents();
                     renderEvents();
                     renderAvailabilityEvents();
+                    
+                    // Send email notification if requested and user is signed in
+                    if (sendEmail && currentUser && currentUser.email) {
+                        sendEmailNotification(eventId, playerName, currentUser.email);
+                    }
                 }
             }
         }
@@ -889,8 +975,17 @@
         function handleAvailabilitySubmit(eventId, inputElement) {
             const playerName = inputElement.value.trim();
             if (playerName) {
-                addAvailability(eventId, playerName);
+                // Check if email notification is requested
+                const emailCheckbox = document.getElementById(`email-${eventId}`);
+                const sendEmail = emailCheckbox && emailCheckbox.checked && currentUser;
+                
+                addAvailability(eventId, playerName, sendEmail);
                 inputElement.value = '';
+                
+                // Reset checkbox if user is signed in
+                if (emailCheckbox && currentUser) {
+                    emailCheckbox.checked = false;
+                }
             }
         }
         
@@ -1080,6 +1175,13 @@
                                 </button>
                             </div>
                             
+                            ${currentUser ? `
+                                <div class="email-notification">
+                                    <input type="checkbox" id="email-${event.id}">
+                                    <label for="email-${event.id}">📧 Send me an email confirmation</label>
+                                </div>
+                            ` : ''}
+                            
                             ${event.availability.length > 0 ? `
                                 <div class="player-list">
                                     ${event.availability.map(player => `
@@ -1157,6 +1259,7 @@
         // Initialize database and render
         checkUserSession();
         initializeDatabase();
+        initializeEmailJS();
     </script>
 </body>
 </html>

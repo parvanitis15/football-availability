@@ -11,6 +11,7 @@ A simple, elegant web application for managing football team match scheduling an
 - **🛡️ Role-based Access**: Admin privileges based on email whitelist
 - **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
 - **🔗 Google Calendar Integration**: One-click calendar event creation
+- **📧 Email Notifications**: Optional email confirmations for signed-in players
 - **💾 Local Storage**: No server required - data saves in your browser
 - **🎨 Modern UI**: Clean, intuitive interface with smooth animations
 
@@ -62,6 +63,7 @@ A simple, elegant web application for managing football team match scheduling an
 2. **Mark Availability**:
    - Use the "Mark Availability" tab (available to all users)
    - Enter your name for matches you can attend
+   - **Signed-in users**: Check "📧 Send me an email confirmation" for match details
    - View other confirmed players
 
 3. **Add to Calendar**:
@@ -72,10 +74,11 @@ A simple, elegant web application for managing football team match scheduling an
 
 - **Technology**: Pure HTML, CSS, and JavaScript with Google OAuth 2.0
 - **Authentication**: Google Sign-In API for secure user authentication
+- **Email Service**: EmailJS for client-side email notifications (optional)
 - **Storage**: Uses browser localStorage for data persistence
 - **Compatibility**: Works in all modern web browsers
-- **File Size**: Single lightweight HTML file (~20KB)
-- **Dependencies**: Google Sign-In JavaScript library
+- **File Size**: Single lightweight HTML file (~25KB)
+- **Dependencies**: Google Sign-In and EmailJS JavaScript libraries
 
 ## 📱 Mobile Support
 
@@ -110,6 +113,24 @@ const ADMIN_EMAILS = [
     'coach@yourteam.com'  // Add admin emails here
 ];
 ```
+
+### Email Notifications Setup (Optional)
+1. **Create EmailJS Account**: Go to [EmailJS.com](https://www.emailjs.com/) and create a free account
+2. **Set up Email Service**: Connect your email provider (Gmail, Outlook, etc.)
+3. **Create Email Template**: Design a template with these variables:
+   - `{{to_name}}` - Player name
+   - `{{match_title}}` - Match title
+   - `{{match_date}}` - Formatted date
+   - `{{match_time}}` - Formatted time
+   - `{{match_location}}` - Match location
+   - `{{available_count}}` - Number of confirmed players
+   - `{{available_players}}` - List of player names
+4. **Update Configuration**: Replace EmailJS constants in `index.html`:
+   ```javascript
+   const EMAILJS_PUBLIC_KEY = 'your_emailjs_public_key';
+   const EMAILJS_SERVICE_ID = 'your_service_id';
+   const EMAILJS_TEMPLATE_ID = 'your_template_id';
+   ```
 
 ### Deployment Notes
 - **Netlify/Vercel**: Drag and drop the `index.html` file

@@ -8,6 +8,7 @@ A single-page HTML application for managing football team match scheduling and p
 - **Match Scheduling**: Admins can create new matches with date, time, location, and notes
 - **Availability Tracking**: Players can mark themselves as available for matches
 - **Admin Player Management**: Admins can remove players from match availability lists
+- **Email Notifications**: Optional email confirmations for signed-in players
 - **Role-based Access**: Admin privileges based on email whitelist
 - **Google Calendar Integration**: Generate calendar links for scheduled matches
 - **Local Storage**: Data persists in browser localStorage
@@ -15,8 +16,10 @@ A single-page HTML application for managing football team match scheduling and p
 
 ## Technical Stack
 - **Frontend**: Vanilla HTML, CSS, JavaScript
-- **Storage**: Browser localStorage
-- **No backend dependencies**
+- **Authentication**: Google OAuth 2.0
+- **Email Service**: EmailJS (optional)
+- **Storage**: Browser localStorage + Supabase
+- **Dependencies**: Google Sign-In API, EmailJS library
 
 ## File Structure
 ```
@@ -37,8 +40,9 @@ football-availability-scheduler/
 - Google OAuth 2.0 authentication
 - Event management (add, delete, render)
 - Availability tracking per event (add/remove players)
+- Email notifications for signed-in users (EmailJS integration)
 - Admin-only player removal from matches
-- Role-based UI updates (admin vs player)
+- Role-based UI updates (admin vs player vs anonymous)
 - Google Calendar link generation
 - Local storage persistence
 - Tab switching functionality
@@ -89,6 +93,17 @@ const ADMIN_EMAILS = [
     'admin@yourteam.com',
     'coach@yourteam.com'  // Add admin emails here
 ];
+```
+
+### Email Notifications Setup (Optional)
+1. Create EmailJS account at https://www.emailjs.com/
+2. Set up email service (Gmail, Outlook, etc.)
+3. Create email template with variables: `{{to_name}}`, `{{match_title}}`, `{{match_date}}`, `{{match_time}}`, `{{match_location}}`, `{{available_count}}`, `{{available_players}}`
+4. Update EmailJS configuration in index.html:
+```javascript
+const EMAILJS_PUBLIC_KEY = 'your_public_key';
+const EMAILJS_SERVICE_ID = 'your_service_id';
+const EMAILJS_TEMPLATE_ID = 'your_template_id';
 ```
 
 ## Development Commands
