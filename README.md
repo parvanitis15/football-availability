@@ -1,12 +1,16 @@
-# ⚽ Football Team Availability Scheduler
+# ⚽ Pagkrati FC Team Availability
 
 A simple, elegant web application for managing football team match scheduling and tracking player availability. Perfect for local teams, recreational leagues, or any group that needs to coordinate match attendance.
 
+🚀 **Live App**: https://pagkrati-fc.netlify.app
+
 ## 🚀 Features
 
-- **📅 Match Scheduling**: Easily create and manage upcoming matches
+- **🔐 Google Authentication**: Secure sign-in with Google accounts
+- **📅 Match Scheduling**: Admins can easily create and manage upcoming matches
 - **✋ Availability Tracking**: Players can mark themselves as available for matches
 - **👑 Admin Player Management**: Admins can remove players from match availability lists
+- **🛡️ Role-based Access**: Admin privileges based on email whitelist
 - **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
 - **🔗 Google Calendar Integration**: One-click calendar event creation
 - **💾 Local Storage**: No server required - data saves in your browser
@@ -14,49 +18,64 @@ A simple, elegant web application for managing football team match scheduling an
 
 ## 🎯 Quick Start
 
-1. **Download**: Save the `index.html` file to your computer
-2. **Open**: Double-click the file to open it in your web browser
-3. **Admin Login**: Use admin password to access match creation features
-4. **Schedule**: Use the "Schedule Matches" tab to create your first match
-5. **Share**: Send the file to your team members so they can mark their availability
+1. **Visit the App**: Go to https://pagkrati-fc.netlify.app
+2. **Sign In**: Click "Sign in with Google" (admins get scheduling privileges)
+3. **Schedule Matches**: Admins can create and manage matches
+4. **Mark Availability**: Players can mark themselves available for upcoming matches
+5. **Share**: Send the URL to your team members
+
+### For Development
+1. **Clone Repository**: `git clone https://github.com/parvanitis15/football-availability.git`
+2. **Local Testing**: Use `python -m http.server 8000` then visit `http://localhost:8000`
+3. **Deploy**: Push to main branch for automatic Netlify deployment
 
 ## 📖 How to Use
 
-### For Team Managers
+### For Team Managers (Admins)
 
-1. **Schedule a Match**:
+1. **Sign In**:
+   - Click "Sign in with Google" and use an admin email account
+   - Admin status is automatically granted based on email whitelist
+
+2. **Schedule a Match**:
+   - Access the "Schedule Matches" tab (visible only to admins)
    - Fill in match details (title, date, time, location)
    - Add any special notes or instructions
    - Click "Schedule Match"
 
-2. **View Availability**:
+3. **Manage Matches**:
+   - Delete matches if plans change
+   - Remove players from match availability lists using the × button
+   - View all upcoming matches in chronological order
+
+4. **View Availability**:
    - See how many players have confirmed availability
    - Review the list of available players
    - Generate Google Calendar links for easy sharing
 
-3. **Manage Matches**:
-   - Delete matches if plans change
-   - Remove players from match availability lists
-   - View all upcoming matches in chronological order
-
 ### For Players
 
-1. **Mark Availability**:
-   - Switch to the "Mark Availability" tab
+1. **Optional Sign In**:
+   - Players can optionally sign in with Google for a personalized experience
+   - No sign-in required to mark availability
+
+2. **Mark Availability**:
+   - Use the "Mark Availability" tab (available to all users)
    - Enter your name for matches you can attend
    - View other confirmed players
 
-2. **Add to Calendar**:
+3. **Add to Calendar**:
    - Click "Add to Google Calendar" to save match details
    - Set reminders and share with family/friends
 
 ## 🛠️ Technical Details
 
-- **Technology**: Pure HTML, CSS, and JavaScript - no frameworks required
+- **Technology**: Pure HTML, CSS, and JavaScript with Google OAuth 2.0
+- **Authentication**: Google Sign-In API for secure user authentication
 - **Storage**: Uses browser localStorage for data persistence
 - **Compatibility**: Works in all modern web browsers
-- **File Size**: Single lightweight HTML file (~15KB)
-- **Dependencies**: None - completely self-contained
+- **File Size**: Single lightweight HTML file (~20KB)
+- **Dependencies**: Google Sign-In JavaScript library
 
 ## 📱 Mobile Support
 
@@ -64,6 +83,24 @@ The application is fully responsive and optimized for mobile devices:
 - Touch-friendly interface elements
 - Optimized layouts for small screens
 - Easy text input on mobile keyboards
+
+## ⚙️ Configuration
+
+### Google OAuth Setup
+1. **Go to Google Cloud Console**: https://console.cloud.google.com/auth/clients/1059039825869-erjpp9hnpgh1sv1jrmv84e01efv0r0un.apps.googleusercontent.com
+2. **Authorized JavaScript Origins**:
+   - Production: `https://pagkrati-fc.netlify.app`
+   - Local testing: `http://localhost:8000`
+3. **Add Authorized Redirect URIs** (same as origins)
+
+### Adding Admin Users
+Edit the `ADMIN_EMAILS` array in `index.html`:
+```javascript
+const ADMIN_EMAILS = [
+    'pearvan14@gmail.com',
+    'newemail@example.com'  // Add new admin emails here
+];
+```
 
 ## 🔧 Customization
 
@@ -113,4 +150,4 @@ This project is open source and available for personal and commercial use. Feel 
 
 ---
 
-**Getting Started**: Simply open `index.html` in your web browser and start scheduling your team's matches! 🚀
+**Getting Started**: Visit https://pagkrati-fc.netlify.app and start scheduling your team's matches! ⚽

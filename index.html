@@ -300,6 +300,54 @@
             flex-wrap: wrap;
         }
         
+        .google-signin-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .google-signin-btn:hover {
+            background: #3367d6;
+            transform: translateY(-1px);
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .user-role {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -349,14 +397,17 @@
                     <h1>⚽ Pagkrati FC Team Availability</h1>
                     <p>Manage your weekly matches and track team availability</p>
                 </div>
-                <div id="adminSection" style="text-align: right;">
-                    <div id="adminLogin" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <input type="password" id="adminPassword" placeholder="Admin Password" style="padding: 8px 12px; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; background: rgba(255,255,255,0.1); color: white; font-size: 0.9rem;" onkeypress="if(event.key==='Enter') attemptAdminLogin();">
-                        <button onclick="attemptAdminLogin()" style="padding: 8px 16px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: white; cursor: pointer; font-size: 0.9rem;">Admin Login</button>
+                <div id="authSection" style="text-align: right;">
+                    <div id="signInButton" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div id="googleSignIn"></div>
                     </div>
-                    <div id="adminWelcome" style="display: none;">
-                        <span style="margin-right: 15px; opacity: 0.9;">👑 Admin Mode</span>
-                        <button onclick="logoutAdmin()" style="padding: 6px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: white; cursor: pointer; font-size: 0.8rem;">Logout</button>
+                    <div id="userProfile" style="display: none;" class="user-profile">
+                        <img id="userAvatar" class="user-avatar" src="" alt="User Avatar">
+                        <div class="user-info">
+                            <span id="userName" class="user-name"></span>
+                            <span id="userRole" class="user-role"></span>
+                        </div>
+                        <button onclick="signOut()" style="padding: 6px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: white; cursor: pointer; font-size: 0.8rem; margin-left: 10px;">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -415,6 +466,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         // Supabase configuration
         const SUPABASE_URL = 'https://educstxlgitewnvxqhlk.supabase.co';
@@ -422,62 +474,118 @@
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        let events = [];
-        let isAdmin = false;
+        // Google OAuth configuration
+        const GOOGLE_CLIENT_ID = '1059039825869-erjpp9hnpgh1sv1jrmv84e01efv0r0un.apps.googleusercontent.com';
         
-        // Admin password hashes (secure - original passwords cannot be retrieved from these hashes)
-        const ADMIN_PASSWORD_HASHES = [
-            '7f0bd2e4eaaf39dd163d9e5b5f15decca806105ca84b62e0500c905372274a59', // Your admin password (securely hashed)
-            'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', // Backup demo password: "hello" 
-            '2cf24dba4f21d4288094c84b7fad10d9c8c8cfce0ab2e8a4e15dccc3c8a3ddae'  // Backup demo password: "test"
+        // Admin email whitelist
+        const ADMIN_EMAILS = [
+            'pearvan14@gmail.com'
         ];
         
-        // Secure hash function using Web Crypto API
-        async function hashPassword(password) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            const hash = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hash));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        // Admin functions
-        async function attemptAdminLogin() {
-            const password = document.getElementById('adminPassword').value;
-            const passwordHash = await hashPassword(password);
+        let events = [];
+        let isAdmin = false;
+        let currentUser = null;
+        
+        // Google Authentication functions
+        function initializeGoogleAuth() {
+            window.google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true
+            });
             
-            if (ADMIN_PASSWORD_HASHES.includes(passwordHash)) {
-                isAdmin = true;
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminWelcome').style.display = 'block';
-                document.getElementById('adminPassword').value = '';
-                localStorage.setItem('isAdmin', 'true');
-                updateAdminUI();
-                alert('Welcome, Admin! You can now create and delete matches.');
+            // Set up the sign-in button with proper configuration
+            window.google.accounts.id.renderButton(
+                document.getElementById('googleSignIn'),
+                {
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with',
+                    shape: 'rectangular'
+                }
+            );
+        }
+        
+        function handleCredentialResponse(response) {
+            // Decode the JWT token to get user info
+            const userInfo = parseJwt(response.credential);
+            
+            currentUser = {
+                email: userInfo.email,
+                name: userInfo.name,
+                picture: userInfo.picture
+            };
+            
+            // Check if user is admin
+            isAdmin = ADMIN_EMAILS.includes(userInfo.email);
+            
+            // Update UI
+            updateAuthUI();
+            
+            // Store user session
+            localStorage.setItem('userSession', JSON.stringify(currentUser));
+            localStorage.setItem('isAdmin', isAdmin.toString());
+            
+            if (isAdmin) {
+                alert(`Welcome, Admin ${userInfo.name}! You can now create and delete matches.`);
             } else {
-                alert('Invalid admin password');
-                document.getElementById('adminPassword').value = '';
+                alert(`Welcome, ${userInfo.name}! You can mark your availability for matches.`);
             }
         }
         
-        function logoutAdmin() {
-            isAdmin = false;
-            document.getElementById('adminLogin').style.display = 'flex';
-            document.getElementById('adminWelcome').style.display = 'none';
-            localStorage.removeItem('isAdmin');
-            updateAdminUI();
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
         }
         
-        function updateAdminUI() {
+        function signOut() {
+            window.google.accounts.id.disableAutoSelect();
+            currentUser = null;
+            isAdmin = false;
+            localStorage.removeItem('userSession');
+            localStorage.removeItem('isAdmin');
+            updateAuthUI();
+        }
+        
+        function updateAuthUI() {
             const scheduleForm = document.getElementById('eventForm');
             const scheduleTab = document.querySelector('[onclick="switchTab(\'schedule\')"]');
+            const signInButton = document.getElementById('signInButton');
+            const userProfile = document.getElementById('userProfile');
             
-            if (isAdmin) {
-                scheduleForm.style.display = 'block';
-                scheduleTab.style.display = 'block';
+            if (currentUser) {
+                // User is signed in
+                signInButton.style.display = 'none';
+                userProfile.style.display = 'flex';
+                
+                // Update user profile display
+                document.getElementById('userAvatar').src = currentUser.picture;
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userRole').textContent = isAdmin ? '👑 Admin' : '⚽ Player';
+                
+                if (isAdmin) {
+                    scheduleForm.style.display = 'block';
+                    scheduleTab.style.display = 'block';
+                } else {
+                    scheduleForm.style.display = 'none';
+                    scheduleTab.style.display = 'none';
+                    // Switch to availability tab if currently on schedule tab
+                    if (document.getElementById('schedule').classList.contains('active')) {
+                        switchTab('availability');
+                    }
+                }
             } else {
+                // User is not signed in
+                signInButton.style.display = 'flex';
+                userProfile.style.display = 'none';
                 scheduleForm.style.display = 'none';
                 scheduleTab.style.display = 'none';
+                
                 // Switch to availability tab if currently on schedule tab
                 if (document.getElementById('schedule').classList.contains('active')) {
                     switchTab('availability');
@@ -489,15 +597,17 @@
             renderAvailabilityEvents();
         }
         
-        // Check if user was previously logged in as admin
-        function checkAdminStatus() {
-            if (localStorage.getItem('isAdmin') === 'true') {
-                isAdmin = true;
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminWelcome').style.display = 'block';
-                updateAdminUI();
+        // Check if user was previously logged in
+        function checkUserSession() {
+            const userSession = localStorage.getItem('userSession');
+            const adminStatus = localStorage.getItem('isAdmin');
+            
+            if (userSession) {
+                currentUser = JSON.parse(userSession);
+                isAdmin = adminStatus === 'true';
+                updateAuthUI();
             } else {
-                updateAdminUI();
+                updateAuthUI();
             }
         }
         
@@ -1029,8 +1139,23 @@
         // Set minimum date to today
         document.getElementById('matchDate').min = new Date().toISOString().split('T')[0];
         
+        // Initialize Google Auth when the library loads
+        window.addEventListener('load', () => {
+            if (window.google) {
+                initializeGoogleAuth();
+            } else {
+                // Wait for Google library to load
+                const checkGoogle = setInterval(() => {
+                    if (window.google) {
+                        clearInterval(checkGoogle);
+                        initializeGoogleAuth();
+                    }
+                }, 100);
+            }
+        });
+        
         // Initialize database and render
-        checkAdminStatus();
+        checkUserSession();
         initializeDatabase();
     </script>
 </body>
