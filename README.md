@@ -6,7 +6,7 @@ A simple, elegant web application for managing football team match scheduling an
 
 - **🔐 Google Authentication**: Secure sign-in with Google accounts
 - **📅 Match Scheduling**: Admins can easily create and manage upcoming matches
-- **✋ Availability Tracking**: Players can mark themselves as available for matches
+- **✋ Availability Tracking**: Players can mark themselves as available or unavailable for matches with smart duplicate detection
 - **👑 Admin Player Management**: Admins can remove players from match availability lists
 - **🛡️ Role-based Access**: Admin privileges based on email whitelist
 - **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
@@ -50,8 +50,8 @@ A simple, elegant web application for managing football team match scheduling an
    - View all upcoming matches in chronological order
 
 4. **View Availability**:
-   - See how many players have confirmed availability
-   - Review the list of available players
+   - See separate counts for available and unavailable players
+   - Review color-coded lists: available players in green, unavailable in red
    - Generate Google Calendar links for easy sharing
 
 ### For Players
@@ -62,9 +62,12 @@ A simple, elegant web application for managing football team match scheduling an
 
 2. **Mark Availability**:
    - Use the "Mark Availability" tab (available to all users)
-   - Enter your name for matches you can attend
+   - Enter your name and choose either "✅ Available" or "❌ Unavailable"
+   - **Smart Status Management**: 
+     - System prevents duplicate entries (alerts if already marked with same status)
+     - Allows status switching with confirmation dialog
    - **Signed-in users**: Check "📧 Send me an email confirmation" for match details
-   - View other confirmed players
+   - View separate lists of available and unavailable players with color-coded tags
 
 3. **Add to Calendar**:
    - Click "Add to Google Calendar" to save match details
@@ -160,6 +163,20 @@ This is a simple, self-contained project. To contribute:
 2. Make your improvements
 3. Test in multiple browsers
 4. Share your enhanced version
+
+## 🆕 Recent Updates
+
+### Availability Status Management (Latest Feature)
+- **Dual Status Support**: Players can now mark themselves as either "Available" ✅ or "Unavailable" ❌
+- **Smart Duplicate Detection**: 
+  - Prevents duplicate entries with the same status (shows alert dialog)
+  - Allows status switching between available/unavailable with confirmation
+- **Enhanced Visual Design**: 
+  - Available players displayed in green tags
+  - Unavailable players displayed in red tags
+  - Separate counts and lists for each status
+- **Improved User Experience**: Clear confirmation dialogs for status changes
+- **Database Enhancement**: Added status column to properly track both availability states
 
 ## 📋 Future Enhancements
 

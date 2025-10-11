@@ -260,6 +260,16 @@
             gap: 8px;
         }
         
+        .player-tag.available {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .player-tag.unavailable {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+        }
+        
         .player-delete-btn {
             background: #dc3545;
             color: white;
@@ -724,7 +734,8 @@
                     .select(`
                         *,
                         availability (
-                            player_name
+                            player_name,
+                            status
                         )
                     `)
                     .order('date', { ascending: true });
@@ -739,7 +750,8 @@
                     time: match.time,
                     location: match.location,
                     notes: match.notes || '',
-                    availability: match.availability.map(a => a.player_name)
+                    availability: match.availability.filter(a => a.status === 'available' || !a.status).map(a => a.player_name),
+                    unavailable: match.availability.filter(a => a.status === 'unavailable').map(a => a.player_name)
                 }));
                 
                 renderEvents();
@@ -820,7 +832,8 @@
                 const newEvent = {
                     id: data.id,
                     ...eventData,
-                    availability: []
+                    availability: [],
+                    unavailable: []
                 };
                 events.push(newEvent);
                 saveEvents();
@@ -832,7 +845,8 @@
                 const newEvent = {
                     id: Date.now(),
                     ...eventData,
-                    availability: []
+                    availability: [],
+                    unavailable: []
                 };
                 events.push(newEvent);
                 saveEvents();
@@ -873,60 +887,117 @@
             }
         }
         
-        async function addAvailability(eventId, playerName, sendEmail = false) {
+        async function addAvailability(eventId, playerName, status = 'available', sendEmail = false) {
             if (!playerName.trim()) return;
             
+            const trimmedName = playerName.trim();
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+            
+            // Check if player already exists in either list
+            const isCurrentlyAvailable = event.availability && event.availability.includes(trimmedName);
+            const isCurrentlyUnavailable = event.unavailable && event.unavailable.includes(trimmedName);
+            
+            // Handle duplicate same-status entries
+            if ((isCurrentlyAvailable && status === 'available') || 
+                (isCurrentlyUnavailable && status === 'unavailable')) {
+                const statusText = status === 'available' ? 'available' : 'unavailable';
+                alert(`${trimmedName} has already been marked as ${statusText} for this match.`);
+                return;
+            }
+            
+            // Handle status switching (available ↔ unavailable)
+            if (isCurrentlyAvailable || isCurrentlyUnavailable) {
+                const currentStatus = isCurrentlyAvailable ? 'available' : 'unavailable';
+                const newStatus = status;
+                
+                if (confirm(`${trimmedName} is currently marked as ${currentStatus}. Do you want to change their status to ${newStatus}?`)) {
+                    // User confirmed the status change
+                } else {
+                    return; // User cancelled
+                }
+            }
+            
             try {
-                // Check if player is already available for this match
+                // Check if player already has a status for this match in database
                 const { data: existing, error: checkError } = await supabase
                     .from('availability')
                     .select('*')
                     .eq('match_id', eventId)
-                    .eq('player_name', playerName)
+                    .eq('player_name', trimmedName)
                     .single();
                 
                 if (existing) {
-                    alert('You have already marked yourself as available for this match!');
-                    return;
+                    // Update existing status
+                    const { error: updateError } = await supabase
+                        .from('availability')
+                        .update({ status: status })
+                        .eq('match_id', eventId)
+                        .eq('player_name', trimmedName);
+                    
+                    if (updateError) throw updateError;
+                } else {
+                    // Add new availability record
+                    const { error } = await supabase
+                        .from('availability')
+                        .insert([{
+                            match_id: eventId,
+                            player_name: trimmedName,
+                            status: status
+                        }]);
+                    
+                    if (error) throw error;
                 }
                 
-                // Add availability to Supabase
-                const { error } = await supabase
-                    .from('availability')
-                    .insert([{
-                        match_id: eventId,
-                        player_name: playerName.trim()
-                    }]);
-                
-                if (error) throw error;
-                
                 // Update local events for immediate UI update
-                const event = events.find(e => e.id === eventId);
-                if (event && !event.availability.includes(playerName)) {
-                    event.availability.push(playerName);
+                if (event) {
+                    // Remove player from both arrays first
+                    event.availability = event.availability ? event.availability.filter(name => name !== trimmedName) : [];
+                    event.unavailable = event.unavailable ? event.unavailable.filter(name => name !== trimmedName) : [];
+                    
+                    // Add to appropriate array
+                    if (status === 'available') {
+                        if (!event.availability) event.availability = [];
+                        event.availability.push(trimmedName);
+                    } else if (status === 'unavailable') {
+                        if (!event.unavailable) event.unavailable = [];
+                        event.unavailable.push(trimmedName);
+                    }
+                    
                     saveEvents();
                     renderEvents();
                     renderAvailabilityEvents();
                     
                     // Send email notification if requested and user is signed in
                     if (sendEmail && currentUser && currentUser.email) {
-                        await sendEmailNotification(eventId, playerName, currentUser.email);
+                        await sendEmailNotification(eventId, trimmedName, currentUser.email);
                     }
                 }
                 
             } catch (error) {
                 console.error('Error adding availability:', error);
                 // Fallback to localStorage
-                const event = events.find(e => e.id === eventId);
-                if (event && !event.availability.includes(playerName)) {
-                    event.availability.push(playerName);
+                if (event) {
+                    // Remove player from both arrays first
+                    event.availability = event.availability ? event.availability.filter(name => name !== trimmedName) : [];
+                    event.unavailable = event.unavailable ? event.unavailable.filter(name => name !== trimmedName) : [];
+                    
+                    // Add to appropriate array
+                    if (status === 'available') {
+                        if (!event.availability) event.availability = [];
+                        event.availability.push(trimmedName);
+                    } else if (status === 'unavailable') {
+                        if (!event.unavailable) event.unavailable = [];
+                        event.unavailable.push(trimmedName);
+                    }
+                    
                     saveEvents();
                     renderEvents();
                     renderAvailabilityEvents();
                     
                     // Send email notification if requested and user is signed in
                     if (sendEmail && currentUser && currentUser.email) {
-                        sendEmailNotification(eventId, playerName, currentUser.email);
+                        sendEmailNotification(eventId, trimmedName, currentUser.email);
                     }
                 }
             }
@@ -953,6 +1024,7 @@
                     const event = events.find(e => e.id === eventId);
                     if (event) {
                         event.availability = event.availability.filter(name => name !== playerName);
+                        event.unavailable = event.unavailable ? event.unavailable.filter(name => name !== playerName) : [];
                         saveEvents();
                         renderEvents();
                         renderAvailabilityEvents();
@@ -964,6 +1036,7 @@
                     const event = events.find(e => e.id === eventId);
                     if (event) {
                         event.availability = event.availability.filter(name => name !== playerName);
+                        event.unavailable = event.unavailable ? event.unavailable.filter(name => name !== playerName) : [];
                         saveEvents();
                         renderEvents();
                         renderAvailabilityEvents();
@@ -972,14 +1045,14 @@
             }
         }
         
-        function handleAvailabilitySubmit(eventId, inputElement) {
+        function handleAvailabilitySubmit(eventId, inputElement, status = 'available') {
             const playerName = inputElement.value.trim();
             if (playerName) {
                 // Check if email notification is requested
                 const emailCheckbox = document.getElementById(`email-${eventId}`);
                 const sendEmail = emailCheckbox && emailCheckbox.checked && currentUser;
                 
-                addAvailability(eventId, playerName, sendEmail);
+                addAvailability(eventId, playerName, status, sendEmail);
                 inputElement.value = '';
                 
                 // Reset checkbox if user is signed in
@@ -1065,21 +1138,41 @@
                             <div class="availability-header">
                                 <h3>Team Availability</h3>
                                 <div class="availability-count">
-                                    ${event.availability.length} player${event.availability.length !== 1 ? 's' : ''} available
+                                    ${event.availability ? event.availability.length : 0} available, ${event.unavailable ? event.unavailable.length : 0} unavailable
                                 </div>
                             </div>
                             
-                            ${event.availability.length > 0 ? `
-                                <div class="player-list">
-                                    ${event.availability.map(player => `
-                                        <div class="player-tag">
-                                            <span>${player}</span>
-                                            ${isAdmin ? `
-                                                <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
-                                            ` : ''}
+                            ${(event.availability && event.availability.length > 0) || (event.unavailable && event.unavailable.length > 0) ? `
+                                ${event.availability && event.availability.length > 0 ? `
+                                    <div style="margin-bottom: 15px;">
+                                        <h4 style="color: #28a745; margin-bottom: 8px; font-size: 0.95rem;">✅ Available (${event.availability.length})</h4>
+                                        <div class="player-list">
+                                            ${event.availability.map(player => `
+                                                <div class="player-tag available">
+                                                    <span>${player}</span>
+                                                    ${isAdmin ? `
+                                                        <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
+                                                    ` : ''}
+                                                </div>
+                                            `).join('')}
                                         </div>
-                                    `).join('')}
-                                </div>
+                                    </div>
+                                ` : ''}
+                                ${event.unavailable && event.unavailable.length > 0 ? `
+                                    <div>
+                                        <h4 style="color: #dc3545; margin-bottom: 8px; font-size: 0.95rem;">❌ Unavailable (${event.unavailable.length})</h4>
+                                        <div class="player-list">
+                                            ${event.unavailable.map(player => `
+                                                <div class="player-tag unavailable">
+                                                    <span>${player}</span>
+                                                    ${isAdmin ? `
+                                                        <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
+                                                    ` : ''}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
                             ` : '<p style="color: #6c757d; font-style: italic;">No availability marked yet</p>'}
                         </div>
                         
@@ -1164,14 +1257,17 @@
                             <div class="availability-header">
                                 <h3>Mark Your Availability</h3>
                                 <div class="availability-count">
-                                    ${event.availability.length} player${event.availability.length !== 1 ? 's' : ''} confirmed
+                                    ${event.availability ? event.availability.length : 0} available, ${event.unavailable ? event.unavailable.length : 0} unavailable
                                 </div>
                             </div>
                             
                             <div class="availability-form">
-                                <input type="text" id="player-${event.id}" placeholder="Enter your name" onkeypress="if(event.key==='Enter') handleAvailabilitySubmit(${event.id}, this);">
-                                <button onclick="handleAvailabilitySubmit(${event.id}, document.getElementById('player-${event.id}'));" class="btn btn-secondary">
-                                    ✋ I'm Available
+                                <input type="text" id="player-${event.id}" placeholder="Enter your name" onkeypress="if(event.key==='Enter') handleAvailabilitySubmit(${event.id}, this, 'available');">
+                                <button onclick="handleAvailabilitySubmit(${event.id}, document.getElementById('player-${event.id}'), 'available');" class="btn btn-secondary">
+                                    ✅ Available
+                                </button>
+                                <button onclick="handleAvailabilitySubmit(${event.id}, document.getElementById('player-${event.id}'), 'unavailable');" class="btn btn-danger">
+                                    ❌ Unavailable
                                 </button>
                             </div>
                             
@@ -1182,18 +1278,38 @@
                                 </div>
                             ` : ''}
                             
-                            ${event.availability.length > 0 ? `
-                                <div class="player-list">
-                                    ${event.availability.map(player => `
-                                        <div class="player-tag">
-                                            <span>${player}</span>
-                                            ${isAdmin ? `
-                                                <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
-                                            ` : ''}
+                            ${(event.availability && event.availability.length > 0) || (event.unavailable && event.unavailable.length > 0) ? `
+                                ${event.availability && event.availability.length > 0 ? `
+                                    <div style="margin-bottom: 15px;">
+                                        <h4 style="color: #28a745; margin-bottom: 8px; font-size: 0.95rem;">✅ Available (${event.availability.length})</h4>
+                                        <div class="player-list">
+                                            ${event.availability.map(player => `
+                                                <div class="player-tag available">
+                                                    <span>${player}</span>
+                                                    ${isAdmin ? `
+                                                        <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
+                                                    ` : ''}
+                                                </div>
+                                            `).join('')}
                                         </div>
-                                    `).join('')}
-                                </div>
-                            ` : '<p style="color: #6c757d; font-style: italic; margin-top: 10px;">Be the first to confirm your availability!</p>'}
+                                    </div>
+                                ` : ''}
+                                ${event.unavailable && event.unavailable.length > 0 ? `
+                                    <div>
+                                        <h4 style="color: #dc3545; margin-bottom: 8px; font-size: 0.95rem;">❌ Unavailable (${event.unavailable.length})</h4>
+                                        <div class="player-list">
+                                            ${event.unavailable.map(player => `
+                                                <div class="player-tag unavailable">
+                                                    <span>${player}</span>
+                                                    ${isAdmin ? `
+                                                        <button class="player-delete-btn" onclick="removeAvailability(${event.id}, '${player}')" title="Remove player">×</button>
+                                                    ` : ''}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            ` : '<p style="color: #6c757d; font-style: italic; margin-top: 10px;">Be the first to mark your availability!</p>'}
                         </div>
                         
                         <div class="event-actions" style="margin-top: 20px;">

@@ -6,7 +6,7 @@ A single-page HTML application for managing football team match scheduling and p
 ## Key Features
 - **Google Authentication**: Secure sign-in with Google accounts
 - **Match Scheduling**: Admins can create new matches with date, time, location, and notes
-- **Availability Tracking**: Players can mark themselves as available for matches
+- **Availability Tracking**: Players can mark themselves as available or unavailable for matches with smart duplicate detection and status switching
 - **Admin Player Management**: Admins can remove players from match availability lists
 - **Email Notifications**: Optional email confirmations for signed-in players
 - **Role-based Access**: Admin privileges based on email whitelist
@@ -25,6 +25,8 @@ A single-page HTML application for managing football team match scheduling and p
 ```
 football-availability-scheduler/
 ├── index.html                      # Main application file
+├── database-schema.sql             # Supabase database schema (for new setups)
+├── migration-add-status.sql        # Migration script (for existing databases)
 ├── CLAUDE.md                       # This context file
 └── README.md                       # Project documentation
 ```
@@ -39,7 +41,8 @@ football-availability-scheduler/
 ### JavaScript Functionality
 - Google OAuth 2.0 authentication
 - Event management (add, delete, render)
-- Availability tracking per event (add/remove players)
+- Availability tracking per event (add/remove players) with smart status management
+- Duplicate entry detection and status switching with confirmation dialogs
 - Email notifications for signed-in users (EmailJS integration)
 - Admin-only player removal from matches
 - Role-based UI updates (admin vs player vs anonymous)
@@ -64,6 +67,7 @@ Events are stored as objects with:
 - `location`: Venue location
 - `notes`: Optional additional information
 - `availability`: Array of player names who marked themselves available
+- `unavailable`: Array of player names who marked themselves unavailable
 
 ### Authentication
 - Google OAuth 2.0 client ID: Configurable in index.html
@@ -106,6 +110,26 @@ const EMAILJS_SERVICE_ID = 'your_service_id';
 const EMAILJS_TEMPLATE_ID = 'your_template_id';
 ```
 
+### Supabase Database Setup
+
+#### For New Setups:
+1. Create a new Supabase project at https://supabase.com/
+2. In your Supabase dashboard, go to SQL Editor
+3. Run the complete SQL script from `database-schema.sql`
+4. Update the Supabase URL and anon key in index.html
+
+#### For Existing Databases:
+1. In your Supabase dashboard, go to SQL Editor
+2. Run the migration script from `migration-add-status.sql`
+3. This will add the `status` column to your existing `availability` table
+
+#### Configuration:
+Update the Supabase URL and anon key in index.html:
+```javascript
+const SUPABASE_URL = 'your_supabase_url';
+const SUPABASE_ANON_KEY = 'your_supabase_anon_key';
+```
+
 ## Development Commands
 Since this is a static HTML file, no build process is required:
 - For local testing: `python -m http.server 8000` then visit `http://localhost:8000`
@@ -116,6 +140,20 @@ Since this is a static HTML file, no build process is required:
 - Modern browsers with localStorage support
 - Responsive design works on mobile and desktop
 - Uses ES6+ JavaScript features
+
+## Recent Updates
+
+### Availability Status Management (Latest)
+- **Dual Status Support**: Players can now mark themselves as either "Available" ✅ or "Unavailable" ❌
+- **Smart Duplicate Detection**: 
+  - Prevents duplicate entries with the same status (shows alert dialog)
+  - Allows status switching between available/unavailable with confirmation
+- **Visual Status Indicators**: 
+  - Available players displayed in green tags
+  - Unavailable players displayed in red tags
+  - Separate counts and lists for each status
+- **Database Schema**: Added `status` column to track both availability states
+- **User Experience**: Clear confirmation dialogs for status changes
 
 ## Potential Enhancements
 - Export functionality for match schedules
